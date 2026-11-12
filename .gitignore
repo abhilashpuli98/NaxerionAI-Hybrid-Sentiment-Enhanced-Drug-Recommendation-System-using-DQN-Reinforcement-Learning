@@ -1,0 +1,56 @@
+# Python environments, bytecode, and test caches
+.venv/
+venv/
+**/venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Local runtime data (may contain personal or medical information)
+instance/
+uploads/
+logs/
+*.log
+
+# Model checkpoints and downloaded weights
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.safetensors
+data/
+checkpoints/
+
+# Generated or unsupported evaluation output
+/.md/
+/output.log
+/report.txt
+/test_results.log
+/test_results.txt
+/test.jpg
+/quick_test.py
+/generate_ieee_plots.py
+/init_db_safe.py
+/setup_and_run.bat
+/SEDRS_Showcase.html
+Verification/verify_system.py
+Naxerion - AI-Online/train_json
+results/system_report.json
+ieee_plots/confusion_matrices.png
+ieee_plots/dqn_reward_convergence.png
+ieee_plots/performance_summary_table.png
+ieee_plots/radar_fusion_weights.png
+ieee_plots/sedrs_vs_baselines.png
+ieee_plots/training_curves.png
+
+# Bundled third-party runtime binaries / voice data; obtain separately under
+# their respective licenses if required.
+Naxerion-AI-Offline/backend/piper/*.dll
+Naxerion-AI-Offline/backend/piper/*.exe
+Naxerion-AI-Offline/backend/piper/espeak-ng-data/
