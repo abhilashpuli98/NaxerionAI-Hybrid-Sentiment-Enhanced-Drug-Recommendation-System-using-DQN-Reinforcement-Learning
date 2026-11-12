@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - SEDRS{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-tachometer-alt text-danger fs-4"></i>
+                </div>
+                <div>
+                    <h2 class="mb-0">Admin Dashboard</h2>
+                    <p class="text-muted mb-0">System monitoring, model performance & analytics</p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <small class="text-muted" id="lastUpdated"></small>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="liveRefreshToggle">
+                    <label class="form-check-label small" for="liveRefreshToggle">Live Refresh</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Metrics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                    style="width:48px;height:48px;">
+                    <i class="fas fa-users text-primary"></i>
+                </div>
+                <h3 class="text-primary mb-0">{{ total_patients }}</h3>
+                <p class="card-text text-muted mb-0">Total Patients</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                    style="width:48px;height:48px;">
+                    <i class="fas fa-flask text-success"></i>
+                </div>
+                <h3 class="text-success mb-0">{{ total_interactions }}</h3>
+                <p class="card-text text-muted mb-0">Total Analyses</p>
+                <small class="text-muted">Last 7 days: {{ recent_interactions_7d }}</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                    style="width:48px;height:48px;">
+                    <i class="fas fa-pills text-info"></i>
+                </div>
+                <h3 class="text-info mb-0">{{ total_recommendations }}</h3>
+                <p class="card-text text-muted mb-0">Total Recommendations</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                    style="width:48px;height:48px;">
+                    <i class="fas fa-chart-pie text-warning"></i>
+                </div>
+                <h3 class="text-warning mb-0">{{ "%.1f"|format(avg_confidence * 100) }}%</h3>
+                <p class="card-text text-muted mb-0">Avg Confidence</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Performance Metrics (from IEEE Paper) -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-brain text-primary me-2"></i>Model Performance Metrics (IEEE ICSSAS-2025)</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- BERT Text Analysis -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2"
+                            style="width:36px;height:36px;">
+                            <i class="fas fa-brain text-primary"></i>
+                        </div>
+                        <div>
+                            <strong>DistilBERT</strong>
+                            <small class="text-muted d-block">Text Sentiment Analysis</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Accuracy</span>
+                        <span class="fw-bold text-primary">{{ model_metrics.bert_accuracy }}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height:8px;">
+                        <div class="progress-bar bg-primary" style="width:{{ model_metrics.bert_accuracy }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>P: {{ model_metrics.bert_precision }}%</span>
+                        <span>R: {{ model_metrics.bert_recall }}%</span>
+                        <span>F1: {{ model_metrics.bert_f1 }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CNN+LSTM Audio -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2"
+                            style="width:36px;height:36px;">
+                            <i class="fas fa-microphone text-info"></i>
+                        </div>
+                        <div>
+                            <strong>CNN+LSTM</strong>
+                            <small class="text-muted d-block">Speech Emotion Recognition</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Accuracy</span>
+                        <span class="fw-bold text-info">{{ model_metrics.cnn_lstm_accuracy }}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height:8px;">
+                        <div class="progress-bar bg-info" style="width:{{ model_metrics.cnn_lstm_accuracy }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>P: {{ model_metrics.cnn_lstm_precision }}%</span>
+                        <span>R: {{ model_metrics.cnn_lstm_recall }}%</span>
+                        <span>F1: {{ model_metrics.cnn_lstm_f1 }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ResNet-50 Image -->
+            <div class="col-md-4">
+                <div class="p-3 border rounded-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2"
+                            style="width:36px;height:36px;">
+                            <i class="fas fa-camera text-success"></i>
+                        </div>
+                        <div>
+                            <strong>ResNet-50</strong>
+                            <small class="text-muted d-block">Drug Image Validation</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Accuracy</span>
+                        <span class="fw-bold text-success">{{ model_metrics.resnet_accuracy }}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height:8px;">
+                        <div class="progress-bar bg-success" style="width:{{ model_metrics.resnet_accuracy }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall System Accuracy -->
+        <div class="mt-3 p-3 bg-light rounded-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong><i class="fas fa-chart-line text-primary me-1"></i> Overall System Accuracy</strong>
+                    <small class="text-muted d-block">Weighted average across all modalities</small>
+                </div>
+                <h3 class="text-primary mb-0">{{ model_metrics.overall_accuracy }}%</h3>
+            </div>
+            <div class="progress mt-2" style="height:10px;">
+                <div class="progress-bar bg-primary" style="width:{{ model_metrics.overall_accuracy }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Sentiment Distribution -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-pie text-warning me-2"></i>Sentiment Distribution</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                {% if sentiment_dist %}
+                <canvas id="sentimentChart" style="max-height:220px;"></canvas>
+                {% else %}
+                <p class="text-muted">No sentiment data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Drugs -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-pills text-primary me-2"></i>Top Recommended Drugs</h6>
+            </div>
+            <div class="card-body">
+                {% if top_drugs %}
+                <div class="list-group list-group-flush">
+                    {% for drug_name, count in top_drugs %}
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span>{{ drug_name }}</span>
+                        <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Conditions -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-stethoscope text-success me-2"></i>Top Conditions Analyzed</h6>
+            </div>
+            <div class="card-body">
+                {% if top_conditions %}
+                <div class="list-group list-group-flush">
+                    {% for condition, count in top_conditions %}
+                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                        <span class="text-capitalize">{{ condition }}</span>
+                        <span class="badge bg-success rounded-pill">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RL Performance Metrics -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-robot text-info me-2"></i>Reinforcement Learning Performance (DQN Agent)</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 text-center">
+                    <small class="text-muted d-block">Reward Progression</small>
+                    <h4 class="text-info mb-0">Adaptive</h4>
+                    <small class="text-muted">ε-greedy exploration</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 text-center">
+                    <small class="text-muted d-block">Avg Feedback</small>
+                    <h4 class="text-success mb-0">{{ avg_feedback }}/5.0</h4>
+                    <small class="text-muted">Patient rating</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 text-center">
+                    <small class="text-muted d-block">Drug Database</small>
+                    <h4 class="text-primary mb-0">39</h4>
+                    <small class="text-muted">Across 18 categories</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3 text-center">
+                    <small class="text-muted d-block">Scoring Model</small>
+                    <h4 class="text-warning mb-0">Composite</h4>
+                    <small class="text-muted">Efficacy + Sentiment + Confidence</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Interactions -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-list-alt text-primary me-2"></i>Recent Interactions</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if recent_interactions_list %}
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient</th>
+                        <th>Condition (Detected)</th>
+                        <th>Sentiment</th>
+                        <th>Confidence</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interaction in recent_interactions_list %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-dark">#{{ interaction.id }}</span>
+                        </td>
+                        <td>
+                            {% if interaction.patient %}
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold">{{ interaction.patient.email }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if interaction.condition == 'General' %}
+                            <span class="badge bg-secondary">General</span>
+                            {% elif interaction.condition and ('heart' in interaction.condition.lower() or 'stroke' in
+                            interaction.condition.lower() or 'cardiac' in interaction.condition.lower()) %}
+                            <span class="badge bg-danger">CRITICAL: {{ interaction.condition }}</span>
+                            {% else %}
+                            <span class="badge bg-info text-dark">{{ interaction.condition }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if interaction.sentiment_label == 'positive' %}
+                            <span class="text-success fw-bold"><i class="fas fa-smile me-1"></i>Positive</span>
+                            {% elif interaction.sentiment_label == 'negative' %}
+                            <span class="text-danger fw-bold"><i class="fas fa-frown me-1"></i>Negative</span>
+                            {% else %}
+                            <span class="text-muted"><i class="fas fa-meh me-1"></i>Neutral</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 6px; width: 60px;">
+                                    <div class="progress-bar {% if interaction.overall_confidence > 0.8 %}bg-success{% elif interaction.overall_confidence > 0.5 %}bg-warning{% else %}bg-danger{% endif %}"
+                                        role="progressbar" style="width: {{ interaction.overall_confidence * 100 }}%">
+                                    </div>
+                                </div>
+                                <small>{{ "%.0f"|format(interaction.overall_confidence * 100) }}%</small>
+                            </div>
+                        </td>
+                        <td>{{ interaction.created_at.strftime('%H:%M %d-%b') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-center">
+            <a href="{{ url_for('web.admin_interactions') }}" class="btn btn-sm btn-link">View All Interactions</a>
+        </div>
+        {% else %}
+        <p class="text-muted p-3">No interactions yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Audit Logs -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-history text-secondary me-2"></i>Recent Activity</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if audit_logs %}
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>IP Address</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-secondary">{{ log.action }}</span>
+                        </td>
+                        <td>
+                            <small>{{ log.resource_type }}</small>
+                        </td>
+                        <td>
+                            <code>{{ log.ip_address }}</code>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ log.created_at.strftime('%m/%d/%Y %H:%M:%S') }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted p-3">No activity logs available</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Admin Actions -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-tools text-danger me-2"></i>Admin Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('web.admin_patients') }}" class="btn btn-outline-primary">
+                <i class="fas fa-users me-1"></i> Manage Patients
+            </a>
+            <a href="{{ url_for('web.admin_interactions') }}" class="btn btn-outline-primary">
+                <i class="fas fa-flask me-1"></i> View Interactions
+            </a>
+            <a href="{{ url_for('web.admin_audit') }}" class="btn btn-outline-primary">
+                <i class="fas fa-history me-1"></i> Audit Trail
+            </a>
+            <button class="btn btn-outline-danger" onclick="exportSystemData()">
+                <i class="fas fa-download me-1"></i> Export Data
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<div id="adminMetrics" style="display:none;" data-patients="{{ total_patients }}"
+    data-interactions="{{ total_interactions }}" data-recommendations="{{ total_recommendations }}"
+    data-confidence="{{ avg_confidence }}" data-bert="{{ model_metrics.bert_accuracy }}"
+    data-cnn="{{ model_metrics.cnn_lstm_accuracy }}" data-resnet="{{ model_metrics.resnet_accuracy }}"
+    data-overall="{{ model_metrics.overall_accuracy }}">
+</div>
+<script>
+    // Sentiment Distribution Chart
+    {% if sentiment_dist %}
+    var sentLabels = [];
+    var sentValues = [];
+    {% for label, count in sentiment_dist %}
+    sentLabels.push('{{ label or "unknown" }}');
+    sentValues.push({{ count }});
+    {% endfor %}
+
+    var sentCanvas = document.getElementById('sentimentChart');
+    if (sentCanvas) {
+        new Chart(sentCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: sentLabels.map(function (l) { return l.charAt(0).toUpperCase() + l.slice(1); }),
+                datasets: [{
+                    data: sentValues,
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+    {% endif %}
+
+    // Live Refresh
+    const lastUpdatedEl = document.getElementById('lastUpdated');
+    if (lastUpdatedEl) {
+        lastUpdatedEl.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    }
+
+    let refreshInterval = null;
+    const toggle = document.getElementById('liveRefreshToggle');
+    if (toggle) {
+        toggle.addEventListener('change', () => {
+            if (toggle.checked) {
+                refreshInterval = setInterval(() => {
+                    window.location.reload();
+                }, 60000);
+                if (typeof SEDRS !== 'undefined' && SEDRS.showToast) {
+                    SEDRS.showToast('Live refresh enabled (every 60s)', 'info', 3000);
+                }
+            } else {
+                clearInterval(refreshInterval);
+                if (typeof SEDRS !== 'undefined' && SEDRS.showToast) {
+                    SEDRS.showToast('Live refresh disabled', 'info', 3000);
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze - SEDRS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                <i class="fas fa-flask text-primary fs-4"></i>
+            </div>
+            <div>
+                <h2 class="mb-0">New Analysis</h2>
+                <p class="text-muted mb-0">Multi-modal AI analysis — Text (BERT), Audio (CNN+LSTM), Image (ResNet-50)
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form id="analyzeForm" enctype="multipart/form-data">
+                    <input type="hidden" name="patient_id" value="{{ patient_id }}">
+
+                    <!-- Step Indicator -->
+                    <div class="step-indicator mb-4">
+                        <div class="step-item active" id="step1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Condition</div>
+                        </div>
+                        <div class="step-item" id="step2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Symptoms</div>
+                        </div>
+                        <div class="step-item" id="step3">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Media</div>
+                        </div>
+                        <div class="step-item" id="step4">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">Submit</div>
+                        </div>
+                    </div>
+
+                    <!-- Condition Input -->
+                    <div class="mb-4">
+                        <label for="condition" class="form-label fw-semibold">
+                            <i class="fas fa-stethoscope text-danger me-1"></i> Medical Condition
+                        </label>
+                        <input type="text" class="form-control" id="condition" name="condition"
+                            placeholder="e.g., malaria, fever, headache, diabetes (leave empty to auto-detect from symptoms)">
+                        <small class="text-muted">If left empty, the system will auto-detect from your symptom
+                            description.</small>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="mb-4">
+                        <label for="text_input" class="form-label fw-semibold">
+                            <i class="fas fa-comment-medical text-primary me-1"></i> Describe Your Symptoms
+                        </label>
+                        <textarea class="form-control" id="text_input" name="text_input" rows="4"
+                            placeholder="e.g., I have been experiencing severe headaches, fever around 101°F, and body aches for the last 3 days..."
+                            required></textarea>
+                        <small class="text-muted">Be as detailed as possible. Analyzed using BERT (93.6%
+                            accuracy).</small>
+                    </div>
+
+                    <!-- Audio Input -->
+                    <div class="mb-4">
+                        <label for="audio_input" class="form-label fw-semibold">
+                            <i class="fas fa-microphone text-info me-1"></i> Audio Recording
+                            <span class="badge bg-info bg-opacity-10 text-info ms-1">Optional</span>
+                        </label>
+                        <div class="drop-zone" id="audioDropZone">
+                            <div class="drop-icon"><i class="fas fa-microphone"></i></div>
+                            <p class="text-muted mb-2">Drag & drop audio file here or click to browse</p>
+                            <input type="file" class="form-control" id="audio_input" name="audio_input"
+                                accept="audio/*">
+                        </div>
+                        <small class="text-muted">Voice emotion recognition using CNN+LSTM (90.9% accuracy).</small>
+                    </div>
+
+                    <!-- Image Input -->
+                    <div class="mb-4">
+                        <label for="image_input" class="form-label fw-semibold">
+                            <i class="fas fa-camera text-success me-1"></i> Drug Image
+                            <span class="badge bg-success bg-opacity-10 text-success ms-1">Optional</span>
+                        </label>
+                        <div class="drop-zone" id="imageDropZone">
+                            <div class="drop-icon"><i class="fas fa-image"></i></div>
+                            <p class="text-muted mb-2">Drag & drop image here or click to browse</p>
+                            <input type="file" class="form-control" id="image_input" name="image_input"
+                                accept="image/*">
+                        </div>
+                        <small class="text-muted">Drug validation using ResNet-50 (88.1% accuracy) — checks
+                            valid/expired/invalid.</small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Number of Recommendations -->
+                    <div class="mb-4">
+                        <label for="top_k" class="form-label fw-semibold">
+                            <i class="fas fa-list-ol text-warning me-1"></i> Number of Recommendations
+                        </label>
+                        <select class="form-select" id="top_k" name="top_k">
+                            <option value="3">3 recommendations</option>
+                            <option value="5" selected>5 recommendations</option>
+                            <option value="10">10 recommendations</option>
+                            <option value="15">15 recommendations</option>
+                            <option value="20">20 recommendations</option>
+                            <option value="30">30 recommendations (All available)</option>
+                        </select>
+                        <small class="text-muted">Choose how many drug recommendations you want to see.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                        <i class="fas fa-search me-2"></i> Run Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Model Info Cards -->
+        <div class="row g-3 mt-3">
+            <div class="col-md-4">
+                <div class="card border-0 bg-primary bg-opacity-10">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-brain text-primary mb-2 d-block fs-4"></i>
+                        <strong class="text-primary">BERT</strong>
+                        <div class="small text-muted">Text Sentiment: 93.6%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-info bg-opacity-10">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-microphone text-info mb-2 d-block fs-4"></i>
+                        <strong class="text-info">CNN+LSTM</strong>
+                        <div class="small text-muted">Speech Emotion: 90.9%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-success bg-opacity-10">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-camera text-success mb-2 d-block fs-4"></i>
+                        <strong class="text-success">ResNet-50</strong>
+                        <div class="small text-muted">Drug Image: 88.1%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none"
+    style="background:rgba(255,255,255,0.9);z-index:9999;">
+    <div class="d-flex flex-column align-items-center justify-content-center h-100">
+        <div class="spinner-border text-primary mb-3" role="status" style="width:3rem;height:3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="text-primary">Analyzing your symptoms...</h5>
+        <p class="text-muted">Processing multi-modal input through BERT, CNN+LSTM, and ResNet-50 pipeline.</p>
+        <div class="progress mt-2" style="width: 200px; height: 6px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Step Indicator
+    function updateSteps() {
+        const condition = document.getElementById('condition').value;
+        const text = document.getElementById('text_input').value;
+        const audio = document.getElementById('audio_input').files.length;
+        const image = document.getElementById('image_input').files.length;
+
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const step4 = document.getElementById('step4');
+
+        // Reset all
+        [step1, step2, step3, step4].forEach(s => {
+            s.classList.remove('active', 'completed');
+        });
+
+        if (condition.length > 0) {
+            step1.classList.add('completed');
+            step2.classList.add('active');
+        } else {
+            step1.classList.add('active');
+        }
+
+        if (text.length > 10) {
+            step2.classList.add('completed');
+            step3.classList.add('active');
+        }
+
+        if (audio > 0 || image > 0) {
+            step3.classList.add('completed');
+            step4.classList.add('active');
+        }
+
+        if (condition.length > 0 && text.length > 10) {
+            step4.classList.add('active');
+        }
+    }
+
+    document.getElementById('condition').addEventListener('input', updateSteps);
+    document.getElementById('text_input').addEventListener('input', updateSteps);
+    document.getElementById('audio_input').addEventListener('change', updateSteps);
+    document.getElementById('image_input').addEventListener('change', updateSteps);
+
+    // Drag & Drop
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        const fileInput = zone.querySelector('input[type="file"]');
+
+        zone.addEventListener('click', (e) => {
+            if (e.target !== fileInput) fileInput.click();
+        });
+
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('dragover');
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+    // Form Submission
+    document.getElementById('analyzeForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const form = this;
+        const submitBtn = document.getElementById('submitBtn');
+        const overlay = document.getElementById('loadingOverlay');
+        const statusText = overlay.querySelector('h5');
+
+        submitBtn.disabled = true;
+        overlay.classList.remove('d-none');
+
+        // Step-by-step loading messages
+        const steps = [
+            'Preprocessing input data...',
+            'Running BERT text analysis...',
+            'Processing audio with CNN+LSTM...',
+            'Validating image with ResNet-50...',
+            'Generating recommendations with DQN agent...',
+            'Finalizing results...'
+        ];
+        let stepIdx = 0;
+        const stepInterval = setInterval(() => {
+            if (stepIdx < steps.length && statusText) {
+                statusText.textContent = steps[stepIdx];
+                stepIdx++;
+            }
+        }, 1500);
+
+        try {
+            const formData = new FormData(form);
+
+            const response = await fetch('{{ url_for("api.analyze_patient_input") }}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            clearInterval(stepInterval);
+
+            if (response.ok && result.interaction_id) {
+                const baseUrl = '{{ url_for("web.analysis_results", interaction_id=0) }}';
+                window.location.href = baseUrl.replace('/0', '/' + result.interaction_id);
+            } else {
+                overlay.classList.add('d-none');
+                submitBtn.disabled = false;
+                SEDRS.showToast('Error: ' + (result.error || 'Analysis failed. Please try again.'), 'danger');
+            }
+        } catch (error) {
+            clearInterval(stepInterval);
+            overlay.classList.add('d-none');
+            submitBtn.disabled = false;
+            SEDRS.showToast('Network error. Please check your connection and try again.', 'danger');
+        }
+    });
+</script>
+{% endblock %}

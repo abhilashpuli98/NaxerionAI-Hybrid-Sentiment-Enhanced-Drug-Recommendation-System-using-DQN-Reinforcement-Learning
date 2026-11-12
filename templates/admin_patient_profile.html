@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Profile - Admin - SEDRS{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('web.admin_dashboard') }}">Admin Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('web.admin_patients') }}">Patients</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ patient.email }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-5 text-primary">
+                <i class="fas fa-user-injured"></i> Patient Profile
+            </h1>
+            <div>
+                <a href="{{ url_for('web.admin_patient_report', patient_id=patient.id) }}"
+                    class="btn btn-outline-primary me-2">
+                    <i class="fas fa-file-download"></i> Download Full Report
+                </a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                    data-bs-target="#deleteHistoryModal">
+                    <i class="fas fa-trash-alt"></i> Clear History
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Patient Details Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-id-card"></i> Personal Information
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>ID:</strong> {{ patient.id }}
+                </div>
+                <div class="mb-3">
+                    <strong>Email:</strong> {{ patient.email }}
+                </div>
+                <div class="mb-3">
+                    <strong>Age:</strong> {{ patient.age or 'Not specified' }}
+                </div>
+                <div class="mb-3">
+                    <strong>Gender:</strong> {{ patient.gender or 'Not specified' }}
+                </div>
+                <div class="mb-3">
+                    <strong>Joined:</strong> {{ patient.created_at.strftime('%Y-%m-%d') }}
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <strong>Medical Conditions:</strong>
+                    <p class="text-muted">{{ patient.medical_conditions or 'None reported' }}</p>
+                </div>
+                <div class="mb-3">
+                    <strong>Allergies:</strong>
+                    <p class="text-muted">{{ patient.allergies or 'None reported' }}</p>
+                </div>
+                <div class="mb-3">
+                    <strong>Current Medications:</strong>
+                    <p class="text-muted">{{ patient.current_medications or 'None reported' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interaction History -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-history"></i> Interaction History
+            </div>
+            <div class="card-body">
+                {% if interactions.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Condition</th>
+                                <th>Confidence</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for interaction in interactions.items %}
+                            <tr>
+                                <td>{{ interaction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ interaction.condition or 'Unknown' }}</td>
+                                <td>
+                                    <span
+                                        class="badge bg-{{ 'success' if interaction.overall_confidence > 0.8 else 'warning' }}">
+                                        {{ "%.0f"|format((interaction.overall_confidence or 0) * 100) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('web.analysis_results', interaction_id=interaction.id) }}"
+                                        class="btn btn-sm btn-primary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if interactions.pages > 1 %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if interactions.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="{{ url_for('web.admin_patient_view', patient_id=patient.id, page=interactions.prev_num) }}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item disabled">
+                            <span class="page-link">Page {{ interactions.page }} of {{ interactions.pages }}</span>
+                        </li>
+
+                        {% if interactions.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="{{ url_for('web.admin_patient_view', patient_id=patient.id, page=interactions.next_num) }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <p class="text-muted text-center py-5">No interactions found for this patient.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clear History Confirmation Modal -->
+<div class="modal fade" id="deleteHistoryModal" tabindex="-1" aria-labelledby="deleteHistoryModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteHistoryModalLabel">Confirm Clear History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete all interaction history for patient <strong>{{ patient.email
+                        }}</strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('web.admin_clear_patient_history', patient_id=patient.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Yes, Clear History</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

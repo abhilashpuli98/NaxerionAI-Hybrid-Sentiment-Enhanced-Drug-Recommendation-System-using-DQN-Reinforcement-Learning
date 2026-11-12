@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEDRS Architecture Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            color: #333; 
+            line-height: 1.6;
+        }
+        h1 { 
+            text-align: center; 
+            color: #2c3e50; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .container { 
+            background: #ffffff; 
+            border: 2px solid #3498db; 
+            border-radius: 12px; 
+            padding: 30px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            position: relative;
+        }
+        .container::before {
+            content: "Figure 1: High-Level System Architecture";
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .mermaid { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+            margin: 20px 0;
+        }
+        .description {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 5px solid #3498db;
+            font-size: 16px;
+        }
+        .description h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+        .legend-item::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+        .legend-item:nth-child(1)::before { background: #e3f2fd; border: 2px solid #1976d2; }
+        .legend-item:nth-child(2)::before { background: #f3e5f5; border: 2px solid #7b1fa2; }
+        .legend-item:nth-child(3)::before { background: #fff3e0; border: 2px solid #f57c00; }
+        .legend-item:nth-child(4)::before { background: #e8f5e8; border: 2px solid #388e3c; }
+        .legend-item:nth-child(5)::before { background: #ede7f6; border: 2px solid #5e35b1; }
+    </style>
+</head>
+<body>
+    <h1>SEDRS: Sentiment-Enhanced Drug Recommendation System - High-Level Architecture</h1>
+    <div class="container">
+        <div class="mermaid">
+            graph LR
+                A[Patient Input<br/>Multimodal Data<br/>Text, Audio, Images] --> B((AI Processing Engine<br/>Sentiment Analysis & Fusion<br/>DistilBERT, CNN+LSTM, ResNet50))
+                B --> C((Recommendation System<br/>Rule-Based + RL Adaptation<br/>DQN for Continuous Learning))
+                C --> D((Clinician Interface<br/>Dashboard & AI Assistant<br/>Flask Web App, Naxerion))
+                D --> E[(Data Storage<br/>Secure Database<br/>PostgreSQL, HIPAA Compliant)]
+                D --> F((Feedback Loop<br/>Outcome Analysis<br/>Patient Adherence & Side Effects))
+                F --> C
+                G((Security & Scalability<br/>HIPAA, Docker, Cloud<br/>Encryption & Audit Logs)) -.-> D
+                G -.-> E
+                
+                classDef inputClass fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#1976d2,font-size:14px
+                classDef processClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#7b1fa2,font-size:14px
+                classDef recClass fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#f57c00,font-size:14px
+                classDef outputClass fill:#e8f5e8,stroke:#388e3c,stroke-width:3px,color:#388e3c,font-size:14px
+                classDef infraClass fill:#ede7f6,stroke:#5e35b1,stroke-width:3px,color:#5e35b1,font-size:14px
+                
+                class A inputClass
+                class B processClass
+                class C recClass
+                class D outputClass
+                class E,F infraClass
+                class G infraClass
+        </div>
+        <div class="legend">
+            <div class="legend-item">Input Layer</div>
+            <div class="legend-item">Processing Layer</div>
+            <div class="legend-item">Recommendation Layer</div>
+            <div class="legend-item">Output Layer</div>
+            <div class="legend-item">Infrastructure Layer</div>
+        </div>
+        <div class="description">
+            <h3>Architecture Overview</h3>
+            <p>The SEDRS architecture follows a modular, scalable design with clear data flow from patient inputs through AI processing to personalized recommendations. The system incorporates multimodal sentiment analysis, reinforcement learning for adaptation, and robust security measures, ensuring HIPAA compliance and real-time performance in clinical settings.</p>
+            <p><strong>Key Features:</strong> End-to-end encryption, containerized deployment (Docker), cloud scalability, and continuous feedback integration for improved drug recommendations over time.</p>
+        </div>
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { fontFamily: 'arial', fontSize: '14px', darkMode: false } });
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">

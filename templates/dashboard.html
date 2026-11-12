@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SEDRS{% endblock %}
+
+{% block content %}
+<!-- Welcome Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-primary text-white border-0" style="border-radius:1.25rem;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="mb-1"><span id="timeGreeting">Welcome</span>, Patient #{{ patient.id }}</h3>
+                        <p class="mb-0 opacity-75">{{ patient.email }} &bull; Last updated: {{
+                            patient.updated_at.strftime('%B %d, %Y') if patient.updated_at else 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <a href="{{ url_for('web.analyze_input') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-flask me-2"></i>New Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-4">
+                <div class="stats-icon bg-primary bg-opacity-10 text-primary mx-auto">
+                    <i class="fas fa-vials"></i>
+                </div>
+                <div class="stats-value">{{ total_interactions }}</div>
+                <div class="stats-label">Total Analyses</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-4">
+                <div class="stats-icon bg-success bg-opacity-10 text-success mx-auto">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="stats-value">{{ recommendations|length }}</div>
+                <div class="stats-label">Recommendations</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-4">
+                <div class="stats-icon bg-info bg-opacity-10 text-info mx-auto">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="stats-value">{{ "%.1f"|format(avg_confidence * 100) }}%</div>
+                <div class="stats-label">Avg Confidence</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-4">
+                <div class="stats-icon mx-auto
+                    {% if health_trend == 'improving' %}bg-success bg-opacity-10 text-success
+                    {% elif health_trend == 'declining' %}bg-danger bg-opacity-10 text-danger
+                    {% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}">
+                    {% if health_trend == 'improving' %}<i class="fas fa-arrow-trend-up"></i>
+                    {% elif health_trend == 'declining' %}<i class="fas fa-arrow-trend-down"></i>
+                    {% else %}<i class="fas fa-minus"></i>{% endif %}
+                </div>
+                <div class="stats-value 
+                    {% if health_trend == 'improving' %}status-improving
+                    {% elif health_trend == 'declining' %}status-declining
+                    {% else %}status-stable{% endif %}">
+                    {{ health_trend|capitalize if health_trend else 'N/A' }}
+                </div>
+                <div class="stats-label">Health Trend</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('web.analyze_input') }}" class="quick-action-card">
+            <div class="action-icon bg-primary bg-opacity-10 text-primary">
+                <i class="fas fa-flask"></i>
+            </div>
+            <h6 class="mb-0">New Analysis</h6>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('web.interaction_history') }}" class="quick-action-card">
+            <div class="action-icon bg-info bg-opacity-10 text-info">
+                <i class="fas fa-history"></i>
+            </div>
+            <h6 class="mb-0">View History</h6>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('web.patient_profile') }}" class="quick-action-card">
+            <div class="action-icon bg-success bg-opacity-10 text-success">
+                <i class="fas fa-user-edit"></i>
+            </div>
+            <h6 class="mb-0">My Profile</h6>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('web.recommendations_view') }}" class="quick-action-card">
+            <div class="action-icon bg-warning bg-opacity-10 text-warning">
+                <i class="fas fa-pills"></i>
+            </div>
+            <h6 class="mb-0">Recommendations</h6>
+        </a>
+    </div>
+</div>
+
+<!-- Health Trend Chart & Recent Recommendations -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-area text-primary me-2"></i>Confidence Trend</h5>
+            </div>
+            <div class="card-body">
+                {% if stats_available %}
+                <canvas id="healthTrendChart" height="200"></canvas>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-chart-line fs-1 mb-3 d-block"></i>
+                    <p>No analysis data yet. Run your first analysis to see trends.</p>
+                    <a href="{{ url_for('web.analyze_input') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-flask me-1"></i>Start Analysis
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-pills text-success me-2"></i>Recent Recommendations</h5>
+                <a href="{{ url_for('web.recommendations_view') }}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recommendations %}
+                <div class="list-group list-group-flush">
+                    {% for rec in recommendations %}
+                    <div class="list-group-item px-4 py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ rec.drug_name }}</h6>
+                                <small class="text-muted">
+                                    Score: {{ "%.2f"|format(rec.composite_score) if rec.composite_score else 'N/A' }}
+                                </small>
+                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                Rank #{{ rec.rank }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-pills fs-3 mb-2 d-block"></i>
+                    <p class="mb-0 small">No recommendations yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Interactions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history text-info me-2"></i>Recent Analyses</h5>
+                <a href="{{ url_for('web.interaction_history') }}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if interactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Condition</th>
+                                <th>Sentiment</th>
+                                <th>Confidence</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for interaction in interactions %}
+                            <tr>
+                                <td><span class="badge bg-light text-dark">#{{ interaction.id }}</span></td>
+                                <td>{{ interaction.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                                <td>{{ interaction.condition or 'N/A' }}</td>
+                                <td>
+                                    {% if interaction.sentiment_label %}
+                                    <span class="badge 
+                                        {% if interaction.sentiment_label == 'positive' %}bg-success
+                                        {% elif interaction.sentiment_label == 'negative' %}bg-danger
+                                        {% else %}bg-warning{% endif %} bg-opacity-10 
+                                        {% if interaction.sentiment_label == 'positive' %}text-success
+                                        {% elif interaction.sentiment_label == 'negative' %}text-danger
+                                        {% else %}text-warning{% endif %}">
+                                        {{ interaction.sentiment_label|capitalize }}
+                                    </span>
+                                    {% else %}N/A{% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height:6px;width:80px;">
+                                        <div class="progress-bar bg-primary"
+                                            style="width:{{ (interaction.overall_confidence or 0) * 100 }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.1f"|format((interaction.overall_confidence or 0) *
+                                        100) }}%</small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('web.analysis_results', interaction_id=interaction.id) }}"
+                                        class="btn btn-sm btn-primary me-1">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('web.download_report', interaction_id=interaction.id) }}"
+                                        class="btn btn-sm btn-outline-secondary" title="Download PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fs-1 mb-3 d-block"></i>
+                    <p>No analyses yet. Start your first analysis now!</p>
+                    <a href="{{ url_for('web.analyze_input') }}" class="btn btn-primary">
+                        <i class="fas fa-flask me-1"></i>New Analysis
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if stats_available %}
+<script>
+    fetch('{{ url_for("web.patient_chart_data") }}')
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('healthTrendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{
+                        label: 'Confidence Score',
+                        data: data.avg_confidence,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#4f46e5'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                callback: v => (v * 100).toFixed(0) + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endif %}
+{% endblock %}

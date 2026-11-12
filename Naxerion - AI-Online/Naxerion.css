@@ -1,0 +1,368 @@
+
+/* THEME VARIABLES       */
+/* Dark + Light Switch   */
+:root,body{
+    font-family:'Inter','Manrope',sans-serif;
+    /* Dark Mode (Default Values) */
+    --bg-main: #020617;
+    --bg-glass: rgba(30,41,59,0.6);
+    --bg-inset: #1e293b;
+    --bg-interactive: #334155;
+    --bg-interactive-hover: #475569;
+    --text-primary: rgb(248, 250, 252);
+    --text-secondary: #94a3b9;
+    --text-accent: #38bdf8;
+    --accent-primary: #0ea5e9;
+    --accent-primary-hover: #0284c7;
+    --border-subtle:rgba(255,255,255,0.1);
+    --shadow-color:rgba(0,0,0,0.5);
+    --user-bubble-bg: #4f46e5;
+    --bot-bubble-bg:#334155;
+    --danger: rgb(239, 68, 68);
+}
+
+/* Light Mode Overrides */
+body.light-mode{
+    --bg-main: #f1f5f9; 
+    --bg-glass: rgba(255, 255, 255, 0.6);
+    --bg-inset: #e2e8f0; 
+    --bg-interactive: #cbd5e1; 
+    --bg-interactive-hover: #94a3b8; 
+    --text-primary: #0f172a; 
+    --text-secondary: #475569; 
+    --text-accent: #0ea5e9; 
+    --accent-primary: #0ea5e9; 
+    --accent-primary-hover: #0284c7; 
+    --border-subtle: rgba(0, 0, 0, 0.1);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --user-bubble-bg: #4f46e5;
+    --bot-bubble-bg: #ffffff; 
+}
+
+body{
+    background-color:var(--bg-main);
+    color:var(--text-primary);
+    transition: background-color 0.3s ease,color 0.3s ease;
+}
+.gap-2-custom {
+    gap: 0.4rem;
+}
+/* ... existing code ... */
+body{
+    background-color:var(--bg-main);
+    color:var(--text-primary);
+    transition: background-color 0.3s ease,color 0.3s ease;
+}
+
+/* CUSTOM SLIDER STYLING (For Developer Settings) */
+input[type=range] {
+    -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+    appearance: none;
+    width: 100%; /* Specific width is required for Firefox. */
+    background: transparent; /* Otherwise white in Chrome */
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    margin-top: -6px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+    box-shadow: 0 0 0 2px var(--bg-inset); /* Ring effect */
+    transition: transform 0.1s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: var(--bg-interactive);
+    border-radius: 2px;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: var(--bg-interactive-hover);
+}
+
+/* Firefox overrides */
+input[type=range]::-moz-range-thumb {
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 0 2px var(--bg-inset);
+}
+
+input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: var(--bg-interactive);
+    border-radius: 2px;
+}
+
+/* ... existing code ... */
+
+/* LOADER ANIMATION      */
+.loader-wrapper {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 180px;
+    height: 180px;
+    font-family: "Inter", sans-serif;
+    font-size: 1.2em;
+    font-weight: 300;
+    color: white;
+    border-radius: 50%;
+    background-color: transparent;
+    user-select: none;
+}
+
+.loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background-color: transparent;
+    animation: loader-rotate 2s linear infinite;
+    z-index: 0;
+}
+
+@keyframes loader-rotate {
+    0% { transform: rotate(90deg); box-shadow: 0 10px 20px 0 rgb(255, 255, 255) inset, 0 20px 30px 0 rgb(173, 95, 255) inset, 0 60px 60px 0 rgb(70, 25, 254) inset; }
+    50% { transform: rotate(270deg); box-shadow: 0 10px 20px 0 rgb(255, 255, 255) inset, 0 20px 10px 0 rgb(214, 10, 71) inset, 0 40px 60px 0 rgb(49, 30, 128) inset; }
+    100% { transform: rotate(450deg); box-shadow: 0 10px 20px 0 #fff inset, 0 20px 30px 0 #ad5fff inset, 0 60px 60px 0 #471eec inset; }
+}
+
+.loader-letter {
+    display: inline-block;
+    opacity: 0.4;
+    transform: translateY(0);
+    animation: loader-letter-anim 2s infinite;
+    z-index: 1;
+    border-radius: 50ch;
+    border: none;
+}
+
+.loader-letter:nth-child(1) { animation-delay: 0s; } 
+.loader-letter:nth-child(2) { animation-delay: 0.1s; } 
+.loader-letter:nth-child(3) { animation-delay: 0.2s; } 
+.loader-letter:nth-child(4) { animation-delay: 0.3s; } 
+.loader-letter:nth-child(5) { animation-delay: 0.4s; } 
+.loader-letter:nth-child(6) { animation-delay: 0.5s; } 
+.loader-letter:nth-child(7) { animation-delay: 0.6s; } 
+.loader-letter:nth-child(8) { animation-delay: 0.7s; } 
+.loader-letter:nth-child(9) { animation-delay: 0.8s; } 
+.loader-letter:nth-child(10) { animation-delay: 0.9s; }
+
+@keyframes loader-letter-anim {
+    0%, 100% { opacity: 0.4; transform: translateY(0); }
+    20% { opacity: 1; transform: scale(1.15); }
+    40% { opacity: 0.7; transform: translateY(0); }
+}
+
+/* GLOBAL BACKGROUND FX  */
+.center-screen{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 2px;
+    height:25vh;
+    width:50%;
+
+}
+
+body::before{
+    content:'';
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background: radial-gradient(circle at 10% 20%, var(--accent-primary) 0%, transparent 25%),
+                radial-gradient(circle at 90% 80%, #4f46e5 0%, transparent 25%);
+    opacity: 0.15;
+    z-index: -1;
+    filter:blur(100px);
+}
+
+/* Custom Scrollbar */
+.chat-container::-webkit-scrollbar {width: 6px;}
+.chat-container::-webkit-scrollbar-track {background: transparent;}
+.chat-container::-webkit-scrollbar-thumb {background: var(--bg-interactive); border-radius:3px}
+.chat-container::-webkit-scrollbar-thumb:hover {background: var(--bg-interactive-hover);}
+
+/* GLASS UI CONTAINER    */
+.glass-container{
+    background: var(--bg-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 8px 32px 0 var(--shadow-color);
+}
+
+/* MODE SWITCH (Chat/Plan/Image) */
+.segmented-control{
+    background-color: var(--bg-inset);
+    padding: 4px;
+    border-radius: 0.75rem;
+    display: flex;
+    gap:4px;
+    position:relative;
+}
+
+.segmented-control .indicator{
+    position:absolute;
+    top: 6px;
+    bottom:4px;
+    width:var(--indicator-width);
+    left: var(--indicator-left);
+    background-color: var(--accent-primary);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: left 0.3s cubic-bezier(0.25,0.8,0.25,1), width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1;
+}
+
+.segmented-control button{
+    background: none;
+    border:none;
+    padding: 0.5rem 1rem;
+    color:var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: color 0.3s ease;
+    cursor: pointer;
+    z-index:2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.segmented-control button.active{color:white;}
+
+/* TONE DROPDOWN FIX  */
+#tone-selector {
+    background-color: var(--bg-interactive);
+    color: var(--text-primary);
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,…");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1.5rem 1.5rem;
+    transition: background-color 0s ease;
+}
+
+#tone-selector option {
+    background-color: var(--bg-inset);
+    color: var(--text-primary);
+    transition: background-color 0s ease;
+}
+
+/* MARKDOWN & CODE UI    */
+.prose{
+    width: 100%;
+    max-width:none;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+/* STRICT Code Block Styles */
+.prose pre {
+    background-color: rgb(30, 30, 30) !important;
+    color: #d4d4d4 !important;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: 'JetBrains Mono' monospace;
+    font-size: 0.875rem;
+    display: block !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
+.prose code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875em;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    background-color: rgba(0,0,0,0.2);
+}
+
+/* MODAL COMPONENT       */
+.modal-overlay{
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content{
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    padding: 2rem;
+    border-radius: 1.5rem;
+    width:90%;
+    max-width:450px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content{
+    transform: scale(1);
+}
+/* Minimal Right-Bottom Footer */
+.nax-footer-mini {
+    position: fixed;
+    right: 14px;
+    bottom: 10px;
+    font-size: 0.78rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--bg-interactive);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    opacity: 0.85;
+    z-index: 9999;
+    pointer-events: none; /* doesn’t block button clicks */
+}
+
+body.light-mode .nax-footer-mini {
+    color: var(--text-primary);
+    opacity: 0.9;
+}

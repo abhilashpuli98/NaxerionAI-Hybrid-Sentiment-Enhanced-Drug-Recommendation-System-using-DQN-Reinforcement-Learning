@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - SEDRS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-check-circle text-success fs-4"></i>
+                </div>
+                <div>
+                    <h2 class="mb-0">Analysis Results</h2>
+                    <p class="text-muted mb-0">Interaction #{{ interaction.id }} &bull; {{
+                        interaction.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-outline-secondary no-print">
+                    <i class="fas fa-print me-2"></i>Print
+                </button>
+                <a href="{{ url_for('web.download_report', interaction_id=interaction.id) }}"
+                    class="btn btn-outline-primary no-print">
+                    <i class="fas fa-file-pdf me-2"></i>Download PDF
+                </a>
+            </div>
+        </div>
+
+        <!-- Analysis Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-stethoscope text-primary me-2"></i>Analysis Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-muted d-block mb-1">Detected Condition</small>
+                            <h5 class="mb-0 text-primary text-capitalize">{{ interaction.condition or 'Not detected' }}
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-muted d-block mb-1">Sentiment</small>
+                            <h5 class="mb-0">
+                                {% if interaction.sentiment_label == 'positive' %}
+                                <span class="text-success"><i class="fas fa-smile me-1"></i>Positive</span>
+                                {% elif interaction.sentiment_label == 'negative' %}
+                                <span class="text-danger"><i class="fas fa-frown me-1"></i>Negative</span>
+                                {% else %}
+                                <span class="text-warning"><i class="fas fa-meh me-1"></i>Neutral</span>
+                                {% endif %}
+                                <small class="text-muted ms-1">({{ "%.2f"|format(interaction.sentiment_score or 0)
+                                    }})</small>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-muted d-block mb-1">Overall Confidence</small>
+                            <h5 class="mb-0 text-info">{{ "%.1f"|format((interaction.overall_confidence or 0) * 100) }}%
+                            </h5>
+                            <div class="progress mt-2" style="height:6px;">
+                                <div class="progress-bar bg-info"
+                                    style="width:{{ (interaction.overall_confidence or 0) * 100 }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Modal Breakdown -->
+                <div class="row g-3 mt-2">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-brain text-primary me-2"></i>
+                                <strong>Text Analysis (BERT)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Prediction</small>
+                                <span
+                                    class="badge {% if interaction.text_sentiment == 2 %}bg-success{% elif interaction.text_sentiment == 0 %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {% if interaction.text_sentiment == 2 %}Positive{% elif interaction.text_sentiment
+                                    == 0 %}Negative{% else %}Neutral{% endif %}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Confidence</small>
+                                <small class="fw-bold">{{ "%.1f"|format((interaction.text_confidence or 0) * 100)
+                                    }}%</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-microphone text-info me-2"></i>
+                                <strong>Audio (CNN+LSTM)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Emotion</small>
+                                <span class="badge bg-info text-capitalize">{{ interaction.audio_emotion or 'N/A'
+                                    }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Confidence</small>
+                                <small class="fw-bold">{{ "%.1f"|format((interaction.audio_confidence or 0) * 100)
+                                    }}%</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-camera text-success me-2"></i>
+                                <strong>Image (ResNet-50)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Validity</small>
+                                <span class="badge bg-success text-capitalize">{{ interaction.image_validity or 'N/A'
+                                    }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Confidence</small>
+                                <small class="fw-bold">{{ "%.1f"|format((interaction.image_confidence or 0) * 100)
+                                    }}%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if interaction.text_input %}
+                <div class="mt-4">
+                    <small class="text-muted d-block mb-1">Patient Description</small>
+                    <p class="mb-0 bg-light p-3 rounded-3" style="white-space:pre-wrap;">{{ interaction.text_input }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Drug Recommendations -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-pills text-success me-2"></i>Drug Recommendations</h5>
+                <span class="badge bg-success">{{ recommendations|length }} found</span>
+            </div>
+            <div class="card-body p-0">
+                {% if recommendations %}
+                <div class="accordion" id="recAccordion">
+                    {% for rec in recommendations %}
+                    <div class="border-bottom">
+                        <!-- Main Row -->
+                        <div class="d-flex align-items-center p-3">
+                            <div class="me-3">
+                                <span class="badge rounded-pill 
+                                    {% if rec.rank == 1 %}bg-success
+                                    {% elif rec.rank == 2 %}bg-primary
+                                    {% elif rec.rank == 3 %}bg-info
+                                    {% else %}bg-secondary{% endif %} fs-6">
+                                    #{{ rec.rank }}
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong class="d-block">{{ rec.drug_name }}</strong>
+                                <small class="text-muted text-capitalize">{{ rec.category | replace('_', ' ') }}</small>
+                            </div>
+                            <div class="text-center me-3" style="min-width:80px;">
+                                <small class="text-muted d-block">Score</small>
+                                <span class="fw-bold text-primary">{{ "%.4f"|format(rec.composite_score) if
+                                    rec.composite_score else 'N/A' }}</span>
+                            </div>
+                            <div class="text-center me-3" style="min-width:100px;">
+                                <small class="text-muted d-block">Efficacy</small>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-1" style="height:6px;width:60px;">
+                                        <div class="progress-bar bg-primary"
+                                            style="width:{{ (rec.efficacy_score or 0) * 100 }}%"></div>
+                                    </div>
+                                    <small>{{ "%.0f"|format((rec.efficacy_score or 0) * 100) }}%</small>
+                                </div>
+                            </div>
+                            <div class="text-center me-3" style="min-width:80px;">
+                                <small class="text-muted d-block">Sentiment</small>
+                                <span class="badge 
+                                    {% if (rec.sentiment_score or 0) > 0 %}bg-success bg-opacity-10 text-success
+                                    {% elif (rec.sentiment_score or 0) < 0 %}bg-danger bg-opacity-10 text-danger
+                                    {% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}">
+                                    {% if (rec.sentiment_score or 0) > 0 %}<i class="fas fa-arrow-up me-1"></i>
+                                    {% elif (rec.sentiment_score or 0) < 0 %}<i class="fas fa-arrow-down me-1"></i>
+                                        {% else %}<i class="fas fa-minus me-1"></i>{% endif %}
+                                        {{ "%.4f"|format(rec.sentiment_score or 0) }}
+                                </span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#reason{{ rec.rank }}" aria-expanded="false">
+                                <i class="fas fa-info-circle me-1"></i>Why?
+                            </button>
+                        </div>
+                        <!-- Expandable Reason -->
+                        <div class="collapse" id="reason{{ rec.rank }}">
+                            <div class="px-4 pb-3">
+                                <div class="bg-light rounded-3 p-3">
+                                    <h6 class="text-primary mb-2"><i class="fas fa-lightbulb me-1"></i> Why This Drug Is
+                                        Recommended</h6>
+                                    <p class="mb-2">{{ rec.reason or 'Recommendation based on composite scoring of
+                                        efficacy, sentiment analysis, and model confidence.' }}</p>
+                                    {% if rec.side_effects %}
+                                    <div class="mt-2">
+                                        <small class="text-muted d-block mb-1"><i
+                                                class="fas fa-exclamation-triangle text-warning me-1"></i>Known Side
+                                            Effects</small>
+                                        <div>
+                                            {% for effect in rec.side_effects.split(', ') %}
+                                            {% if effect %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning me-1 mb-1">{{
+                                                effect }}</span>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-pills fs-1 mb-3 d-block"></i>
+                    <p>No recommendations were generated for this analysis.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('web.dashboard') }}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+            <a href="{{ url_for('web.analyze_input') }}" class="btn btn-primary">
+                <i class="fas fa-flask me-2"></i>New Analysis
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

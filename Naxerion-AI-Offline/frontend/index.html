@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Naxerion AI - A Multi-Modal Chatbot</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+        <link rel="stylesheet" href="Naxerion.css">
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        
+        <script type="module">
+            import {initializeApp} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+            import {getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            import {getFirestore, doc, setDoc, onSnapshot, setLogLevel} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+            window.firebase = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot, setLogLevel };
+        </script>
+        <script type="module" src="Naxerion.js"></script>
+    
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+        </style>
+    </head>
+    <body class="min-h-screen p-4 flex justify-center items-center">
+        <!-- Main app container-->
+        <div id="app" class="w-full max-w-4xl flex flex-col h-[95vh]">
+            <header class="text-center mb-4 w-full flex-shrink-0">
+                <!--Header Div-->
+                <div class="flex items-center justify-center gap-3">
+                <svg class="w-8 h-8 text-[--accent-primary]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.63,2.006A10,10,0,0,0,2.006,12.373a.75.75,0,0,0,1.458.358A8.5,8.5,0,1,1,12.373,21.994a.75.75,0,0,0-.358,1.458A10,10,0,1,0,11.63,2.006Zm8.14,15.766a.75.75,0,0,0-1.061-1.061l-3.2,3.2a.75.75,0,0,0,1.061,1.061Zm-6.505-1.551a.75.75,0,0,0,.186-1.488,6,6,0,1,1,6.01,6.01.75.75,0,1,0-1.488.186,4.5,4.5,0,1,0-4.708-4.708Z" fill="currentColor"></path></svg>
+                <h1 class="text-3xl font-bold" style="color:var(--text-primary);">Naxerion AI</h1>
+                </div>
+                <div id="status-display" class="flex justify-center items-center mt-3 text-sm space-x-4">
+                    <!--Status indicator-->
+                </div>
+            </header>
+            <!--Control Panel-->
+            <div class="flex flex-col mb-4 w-full sm:flex-row items-center justify-between gap-4 flex-shrink-0">
+                <div id="mode-switch-container" class="flex-grow flex justify-center sm:justify-start">
+                    <div id="mode-switch" class="segmented-control"><!--mode switch--></div>
+                </div>
+
+                <div class="flex items-center gap-2 p-1 rounded-xl" style="background-color: var(--bg-inset);">
+                    <select id="tone-selector" class="bg-transparent text-sm font-semibold py-2 pl-3 rounded-lg cursor-pointer focus:ring-2 focus:outline-none" onchange="setTone(this.value)" disabled style="border: 1px solid var(--border-subtle); --tw-ring-color:var(--accent-primary);">
+                        <!--Tone Selector-->
+                    </select>
+
+                    <!-- ADDED: Settings Toggle Button -->
+                    <button id="settings-toggle" class="p-2.5 rounded-lg transition-colors" onclick="toggleSettings()" title="Developer Settings" style="background-color: var(--bg-interactive); color: var(--text-secondary);">
+                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+
+                    <button id="theme-toggle" class="p-2.5 rounded-lg transition-colors" onclick="toggleTheme()" style="background-color: var(--bg-interactive); color: var(--text-secondary);">
+                        <span id="theme-icon"></span> <!--Theme Selector-->
+                    </button>
+                    <button id="reset-keys" class="p-2.5 rounded-lg transition-colors hover:text-red-400" onclick="clearCredentials()" title="Reset API Keys & Firebase Config" style="background-color: var(--bg-interactive); color:var(--text-secondary);">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            </div>
+
+        <!--Chat Box UI-->
+        <div class="flex flex-col w-full flex-grow glass-container rounded-2xl overflow-hidden">
+            <div id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4 chat-container">
+                <div id="loader-initial" class="text-center mt-20 p-4" style="color:var(--text-secondary)">
+                    <div class="center-screen">
+                        <div class="loader-wrapper">
+                          <span class="loader-letter">A</span>
+                            <span class="loader-letter">s</span>
+                            <span class="loader-letter">s</span>
+                            <span class="loader-letter">i</span>
+                            <span class="loader-letter">s</span>
+                            <span class="loader-letter">t</span>
+                            <span class="loader-letter">a</span>
+                            <span class="loader-letter">n</span>
+                            <span class="loader-letter">t</span>
+                            <span class="loader-letter">&nbsp;</span>
+                            <span class="loader-letter">R</span>
+                            <span class="loader-letter">e</span>
+                            <span class="loader-letter">a</span>
+                            <span class="loader-letter">d</span>
+                            <span class="loader-letter">y</span>
+                        <div class="loader"></div>
+                    </div>
+                </div>
+                    <p class="text-lg font-semibold">Environment initialized.</p>
+                    <p class="text-sm">Execute your first query.</p>
+                </div>
+            </div>
+
+            <form id="chat-form" class="p-4 border-t" style="border-color: var(--border-subtle); background-color: var(--bg-inset);">
+                <div class="flex items-end space-x-3">
+                    <textarea
+                    id="user-input"
+                    class="flex-1 p-3 rounded-xl resize-none focus:ring-2 focus:outline-none placeholder:text-[--text-secondary] transition-shadow duration-200"
+                    style="background-color: var(--bg-interactive); color: var(--text-primary); --tw-ring-color: var(--accent-primary);"
+                    placeholder="Ask Me anything..." rows="1" disabled
+                    ></textarea>
+                    <button type="submit" id="submit-button" class="p-3 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center h-12 w-12" disabled>
+                        <svg id="submit-icon" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <!--API Key Modal-->
+        <div id="api-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold mb-4 text-center" style="color: var(--text-primary);">Setup Required</h2>
+                <p class="text-sm mb-6 text-center" style="color: var(--text-secondary);">
+                    Please Configure the Application Credentials. These are saved Locally in your Web-Browser 
+                </p>
+                <form class="space-y-4" id="api-key-form">
+                    <div class="hidden" id="gemini-input-group">
+                        <label class="block text-xs font-semibold uppercase mb-1" style="color: var(--text-secondary);">Gemini API Key</label>
+                        <input type="password" placeholder="AIzaSy..."
+                        class=" w-full p-3 rounded-lg focus:ring-2 focus:outline-none"
+                        style="background-color: var(--bg-main); color: var(--text-primary); border:1px solid var(--border-subtle); --tw-ring-color: var(--accent-primary);"
+                        id="modal-api-key">
+                    </div>
+                    <div class="hidden" id="firebase-input-group">
+                        <label class="block text-xs font-semibold uppercase mb-1" style="color: var(--text-secondary);">Firebase Config (JSON)</label>
+                        <textarea placeholder='{"apiKey": "...","authDomain": "..."}' id="modal-firebase-config"
+                        class="w-full p-3 rounded-lg focus:ring-2 focus:outline-none font-mono text-xs h-24 resize-none"
+                        style="background-color: var(--bg-main); color: var(--text-primary); border: 1px solid var(--border-subtle); --tw-ring-color: var(--accent-primary);"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3 rounded-lg font-bold text-white transition-transform transform active:scale-95"
+                    style="background-color: var(--accent-primary);">
+                        Save & Connect
+                    </button>
+                    <p class="text-xs text-center mt-4" style="color: var(--text-secondary);">
+                        Don't have a Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline hover:text-red-400">Get one here</a>.
+                    </p>
+                </form>
+            </div>
+        </div>
+        <div class="nax-footer-mini">
+    © 2025<span id="year"></span> Naxerion MIT Licensed
+</div>
+
+        <!-- ADDED: Settings Drawer & Overlay -->
+        <div id="settings-overlay" onclick="toggleSettings()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+        <div id="settings-drawer" class="fixed inset-y-0 right-0 w-80 shadow-2xl transform translate-x-full transition-transform duration-300 z-50 p-6 flex flex-col gap-6" style="background-color: var(--bg-inset); border-left: 1px solid var(--border-subtle);">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold" style="color:var(--text-primary);">Developer Config</h2>
+                <button onclick="toggleSettings()" class="p-2 rounded-lg hover:bg-white/10" style="color:var(--text-secondary);">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="space-y-6 overflow-y-auto flex-1">
+                
+                <!-- System Prompt -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2" style="color:var(--text-secondary);">System Prompt</label>
+                    <textarea id="setting-system-prompt" class="w-full p-2 rounded-lg text-xs h-24 focus:ring-2 focus:outline-none resize-none" style="background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-subtle); --tw-ring-color: var(--accent-primary);" placeholder="Override the default persona..."></textarea>
+                </div>
+
+                <!-- Temperature -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-semibold" style="color:var(--text-secondary);">Temperature</label>
+                        <span id="temp-val" class="text-xs font-mono" style="color:var(--text-accent);">0.3</span>
+                    </div>
+                    <input type="range" id="setting-temp" min="0" max="2" step="0.1" value="0.3" class="w-full h-2 rounded-lg appearance-none cursor-pointer" style="background: var(--bg-interactive);">
+                </div>
+
+                <!-- Top P -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-semibold" style="color:var(--text-secondary);">Top P</label>
+                        <span id="topp-val" class="text-xs font-mono" style="color:var(--text-accent);">1.0</span>
+                    </div>
+                    <input type="range" id="setting-topp" min="0" max="1" step="0.05" value="1.0" class="w-full h-2 rounded-lg appearance-none cursor-pointer" style="background: var(--bg-interactive);">
+                </div>
+
+                <!-- Top K -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-semibold" style="color:var(--text-secondary);">Top K</label>
+                        <span id="topk-val" class="text-xs font-mono" style="color:var(--text-accent);">40</span>
+                    </div>
+                    <input type="range" id="setting-topk" min="1" max="100" step="1" value="40" class="w-full h-2 rounded-lg appearance-none cursor-pointer" style="background: var(--bg-interactive);">
+                </div>
+
+                <!-- Thinking Level -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-semibold" style="color:var(--text-secondary);">Thinking Level</label>
+                        <span id="thinking-val" class="text-xs font-mono" style="color:var(--text-accent);">Normal</span>
+                    </div>
+                     <input type="range" id="setting-thinking" min="1" max="5" step="1" value="2" class="w-full h-2 rounded-lg appearance-none cursor-pointer" style="background: var(--bg-interactive);">
+                </div>
+
+                <!-- Max Output Tokens -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-semibold" style="color:var(--text-secondary);">Max Output Tokens</label>
+                    </div>
+                    <input type="number" id="setting-maxtokens" value="8192" class="w-full p-2 rounded-lg text-sm focus:ring-2 focus:outline-none" style="background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-subtle); --tw-ring-color: var(--accent-primary);">
+                </div>
+
+                <!-- Test Mode Toggle -->
+                <div class="pt-4 mt-2 border-t" style="border-color: var(--border-subtle);">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold" style="color:var(--text-secondary);">Switch to Test-AI</label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="test-mode-toggle" class="sr-only peer" onchange="goToTestPage(this)">
+                            <div class="w-11 h-6 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" style="background-color: var(--bg-interactive);"></div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="pt-4 border-t" style="border-color: var(--border-subtle);">
+                <button onclick="saveSettings()" class="w-full py-2 rounded-lg font-bold text-white transition-transform active:scale-95" style="background-color: var(--accent-primary);">Apply Config</button>
+            </div>
+        </div>
+
+    </body>
+</html>
